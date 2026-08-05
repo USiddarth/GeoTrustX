@@ -71,13 +71,16 @@ selected_module = st.sidebar.radio(
 
 # 5. Dynamic Module Views
 if "01 Overview" in selected_module:
-    try:
-        with open("dashboard.html", "r", encoding="utf-8") as f:
-            html_code = f.read()
-        components.html(html_code, height=900, scrolling=True)
-    except FileNotFoundError:
-        st.error("dashboard.html not found.")
-
+  import os
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        html_path = os.path.join(BASE_DIR, "dashboard.html")
+        
+        try:
+            with open(html_path, "r", encoding="utf-8") as f:
+                html_code = f.read()
+            components.html(html_code, height=900, scrolling=True)
+        except FileNotFoundError:
+            st.error("dashboard.html not found.")  
 elif "02 Source Ingestion" in selected_module:
     st.title("02 :: Source Ingestion Engine")
     col1, col2, col3 = st.columns(3)
