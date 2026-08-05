@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoTrustX | Modern Operations Dashboard</title>
+    
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Sleek Background Grid & Glow Effects */
+        body {
+            background-color: #0b0f17;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 40%),
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 32px 32px, 32px 32px;
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen font-sans flex flex-col selection:bg-blue-500 selection:text-white">
+
+    <!-- Top Navigation -->
+    <header class="bg-gray-900/60 backdrop-blur-md border-b border-white/10 px-8 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <i data-lucide="shield-check" class="w-6 h-6 text-blue-400"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    GeoTrustX <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">v2.0</span>
+                </h1>
+                <p class="text-xs text-gray-400">Real-time Telemetry & Trust Engine</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Engine Operational
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 p-8 max-w-7xl mx-auto w-full space-y-6">
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Card 1 -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span class="text-xs font-medium uppercase tracking-wider text-gray-400">Composite Trust</span>
+                        <div class="text-3xl font-extrabold text-white mt-1">86.4<span class="text-lg text-gray-400 font-normal">%</span></div>
+                    </div>
+                    <div class="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
+                        <i data-lucide="activity" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <!-- Mini Progress Bar -->
+                <div class="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: 86%"></div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span class="text-xs font-medium uppercase tracking-wider text-gray-400">Reliability Index</span>
+                        <div class="text-3xl font-extrabold text-white mt-1">80.0<span class="text-lg text-gray-400 font-normal">%</span></div>
+                    </div>
+                    <div class="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400">
+                        <i data-lucide="cpu" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-purple-500 h-1.5 rounded-full" style="width: 80%"></div>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span class="text-xs font-medium uppercase tracking-wider text-gray-400">Physics Validation</span>
+                        <div class="text-3xl font-extrabold text-white mt-1">100<span class="text-lg text-gray-400 font-normal">%</span></div>
+                    </div>
+                    <div class="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
+                        <i data-lucide="zap" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 100%"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Main Chart Section -->
+        <div class="glass-card rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-base font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="line-chart" class="w-4 h-4 text-blue-400"></i> Trust Stream Telemetry
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Live streaming confidence interval data</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
+                        Interval: 2s
+                    </span>
+                </div>
+            </div>
+            
+            <div class="h-72 w-full">
+                <canvas id="sleekChart"></canvas>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // Chart Setup
+        const ctx = document.getElementById('sleekChart').getContext('2d');
+        
+        // Gradient fill for sleek look
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['12:00:00', '12:00:02', '12:00:04', '12:00:06', '12:00:08', '12:00:10'],
+                datasets: [{
+                    label: 'Trust Score',
+                    data: [78, 81, 79, 85, 83, 86.4],
+                    borderColor: '#3b82f6',
+                    borderWidth: 2.5,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#3b82f6',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                        ticks: { color: '#6b7280', font: { family: 'Inter', size: 11 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                        ticks: { color: '#6b7280', font: { family: 'Inter', size: 11 } },
+                        suggestedMin: 60,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
