@@ -2,96 +2,66 @@ import os
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Safely import custom engine module if available
-try:
-    import engine
-except ImportError:
-    engine = None
-
 # =========================================================
-# 1. PAGE CONFIGURATION (Must be the very first Streamlit command)
+# 1. PAGE CONFIGURATION
 # =========================================================
 st.set_page_config(
     page_title="GeoTrustX",
     page_icon="🛡️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # =========================================================
-# 2. CUSTOM DARK THEME & STYLING
+# 2. CUSTOM CSS (Clean, Full-Screen Dark Theme)
 # =========================================================
-# Note: 'header' is left visible so the sidebar toggle arrow (>) is always accessible.
 st.markdown("""
     <style>
-        /* Dark Theme Colors */
+        /* Base Dark Theme Colors */
         .stApp {
             background-color: #0b0f19;
             color: #e2e8f0;
         }
+
+        /* Hide Sidebar Completely */
         [data-testid="stSidebar"] {
-            background-color: #111827;
+            display: none !important;
         }
 
-        /* Hide Footer Only */
+        /* Hide Footer & Header Bar */
         footer {
-            visibility: hidden;
+            visibility: hidden !important;
+        }
+        
+        header[data-testid="stHeader"] {
+            background: transparent !important;
         }
 
-        /* Layout & Spacing Tweaks */
+        /* Maximize Full Screen Space */
         .block-container {
-            padding-top: 1.5rem !important;
-            padding-bottom: 1rem !important;
-            max-width: 95% !important;
-        }
-
-        /* Reduce Vertical Gap */
-        div[data-testid="stVerticalBlock"] > div {
-            gap: 0.5rem;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            max-width: 100% !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 3. LOGO SETUP
+# 3. DIRECT DASHBOARD RENDERING
 # =========================================================
-if hasattr(st, "logo"):
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+html_path = os.path.join(BASE_DIR, "dashboard.html")
+
+if os.path.exists(html_path):
     try:
-        st.logo("logo.svg", icon_image="logo.svg")
-    except Exception:
-        pass
-
-# =========================================================
-# 4. SIDEBAR NAVIGATION
-# =========================================================
-st.sidebar.title("GeoTrustX Navigation")
-selected_module = st.sidebar.radio(
-    "Select Module:",
-    ["01 Overview", "02 Analytics", "03 Settings"],
-    index=0
-)
-
-# =========================================================
-# 5. MODULE RENDERING
-# =========================================================
-if "01 Overview" in selected_module:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    html_path = os.path.join(BASE_DIR, "dashboard.html")
-
-    if os.path.exists(html_path):
-        try:
-            with open(html_path, "r", encoding="utf-8") as f:
-                html_code = f.read()
-            components.html(html_code, height=900, scrolling=True)
-        except Exception as e:
-            st.error(f"Error reading dashboard.html: {e}")
-    else:
-        st.warning("⚠️ `dashboard.html` was not found in the root folder. Please ensure the file is uploaded to GitHub.")
-
-elif "02 Analytics" in selected_module:
-    st.header("Analytics Module")
-    st.info("Analytics module active.")
-
-elif "03 Settings" in selected_module:
-    st.header("Settings Module")
-    st.write("Configuration panel.")
+        with open(html_path, "r", encoding="utf-8") as f:
+            html_code = f.read()
+        
+        # Render HTML directly across the entire screen
+        components.html(html_code, height=950, scrolling=True)
+    except Exception as e:
+        st.error(f"Error loading dashboard: {e}")
+else:
+    st.warning("⚠️ `dashboard.html` was not found in the root directory. Please make sure it is saved in your project folder and pushed to GitHub.")
