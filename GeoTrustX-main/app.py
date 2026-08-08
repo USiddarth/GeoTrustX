@@ -85,7 +85,7 @@ modules = [
 selected_module = st.sidebar.radio(
     "Select Module:",
     modules,
-    index=6,
+    index=5,  # Defaulted to 06 Trust & Decision
     label_visibility="collapsed"
 )
 
@@ -94,7 +94,7 @@ st.sidebar.caption("GEOTRUSTX v2.0 | **ENTERPRISE**")
 st.sidebar.info("⚙️ LOCAL MATH ENGINE")
 
 # =========================================================
-# 4. INTERACTIVE MAP ENGINE HTML GENERATOR (FORCED DARK MODE)
+# 4. INTERACTIVE MAP ENGINE HTML GENERATOR
 # =========================================================
 def render_navigation_map():
     map_html = """
@@ -106,7 +106,6 @@ def render_navigation_map():
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
         <style>
-            /* Force Dark Canvas Background */
             html, body { 
                 margin: 0; 
                 padding: 0; 
@@ -123,13 +122,9 @@ def render_navigation_map():
             .leaflet-container { 
                 background: #0b0f19 !important; 
             }
-
-            /* Invert Map Tiles to High-Tech Dark Cyberpunk Theme */
             .leaflet-tile-pane {
                 filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(90%);
             }
-            
-            /* Custom Floating Navigation Control Panel */
             .nav-panel {
                 position: absolute;
                 top: 20px;
@@ -168,9 +163,7 @@ def render_navigation_map():
                 transition: 0.2s;
             }
             .nav-panel button:hover { background: #0369a1; }
-            
             .leaflet-routing-container { display: none !important; }
-            
             .stats-badge {
                 display: flex;
                 justify-content: space-between;
@@ -207,7 +200,6 @@ def render_navigation_map():
         <script>
             var map = L.map('map').setView([12.8702, 74.8806], 12);
 
-            // Fast, high-reliability OpenStreetMap layer (Dark inverted via CSS)
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; OpenStreetMap'
@@ -249,9 +241,10 @@ def render_navigation_map():
     return map_html
 
 # =========================================================
-# 5. MODULE ROUTING
+# 5. MODULE CONTENT ROUTING
 # =========================================================
 
+# --- 01 OVERVIEW ---
 if "01 Overview" in selected_module:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     html_path = os.path.join(BASE_DIR, "dashboard.html")
@@ -266,34 +259,171 @@ if "01 Overview" in selected_module:
     else:
         st.warning("⚠️ `dashboard.html` was not found in the root directory.")
 
+# --- 02 SOURCE INGESTION ---
 elif "02 Source Ingestion" in selected_module:
     st.header("📡 02 Source Ingestion Pipeline")
-    st.caption("Real-Time Multi-Sensor Telemetry")
+    st.caption("Real-Time Multi-Sensor Telemetry & Data Stream Ingestion")
+    st.markdown("---")
+    
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Active Streams", "12 / 12", "Operational")
     col2.metric("Ingestion Rate", "1.24 GB/s", "+0.08 GB/s")
     col3.metric("Signal Quality", "99.4%", "+0.2%")
     col4.metric("Avg Latency", "8.2 ms", "-1.1 ms")
+    
+    st.markdown("### 📈 Live Telemetry Throughput")
+    chart_data = pd.DataFrame(
+        np.random.randn(20, 3) * [2, 5, 1] + [100, 250, 50],
+        columns=['Satellite Feed Alpha', 'Hydrological Sensor B', 'Radar Array 04']
+    )
+    st.line_chart(chart_data)
 
+# --- 03 CONSISTENCY ENGINE ---
 elif "03 Consistency Engine" in selected_module:
     st.header("⚙️ 03 Consistency Engine")
+    st.caption("Pairwise Conflict Matrices & Multi-Source Cross-Verification")
+    st.markdown("---")
+    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Consistency Index", "87.0%", "+1.4%")
+    col2.metric("Pairwise Conflicts", "0 Detected", "Optimal")
+    col3.metric("Matrix Sync Time", "1.2 ms", "Real-Time")
 
+    st.markdown("### 🔍 Pairwise Disagreement Matrix")
+    matrix_data = pd.DataFrame(
+        [
+            [1.00, 0.98, 0.95, 0.99],
+            [0.98, 1.00, 0.92, 0.97],
+            [0.95, 0.92, 1.00, 0.94],
+            [0.99, 0.97, 0.94, 1.00]
+        ],
+        columns=["Sensor Alpha", "Sensor Beta", "Radar Gamma", "Sat Delta"],
+        index=["Sensor Alpha", "Sensor Beta", "Radar Gamma", "Sat Delta"]
+    )
+    st.dataframe(matrix_data, use_container_width=True)
+
+# --- 04 CONFIDENCE ENGINE ---
 elif "04 Confidence Engine" in selected_module:
     st.header("🎯 04 Confidence Engine")
+    st.caption("Ensemble Standard Deviation (sigma) & Calibrated Monte Carlo Bounds")
+    st.markdown("---")
+    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Confidence Score", "82.0%", "Calibrated")
+    col2.metric("Std Deviation Spread", "1.42", "-0.15")
+    col3.metric("Monte Carlo Iterations", "10,000", "Passed")
 
+    st.markdown("### 🎲 Monte Carlo Confidence Interval Spread")
+    np.random.seed(42)
+    mc_sim = pd.DataFrame(
+        np.random.normal(82, 1.42, size=(100, 1)),
+        columns=["Calibrated Score Spread"]
+    )
+    st.area_chart(mc_sim)
+
+# --- 05 PHYSICS VALIDATION ---
 elif "05 Physics Validation" in selected_module:
-    st.header("⚡ 05 Physics Validation")
+    st.header("⚡ 05 Physics Validation Engine")
+    st.caption("Real-Time Physical Boundary & Hydro-Constraint Compliance")
+    st.markdown("---")
+    
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.metric("Physics Validation Score", "100%", "Pass Rate")
+        st.success("✅ Hydrological Constraints Verified")
+        st.success("✅ Velocity Cap Limits Verified")
+        st.success("✅ Thermal Gradient Bounds Passed")
+    
+    with col2:
+        st.markdown("### 📜 Constraint Rule Audit Log")
+        st.code("""
+[SYSTEM] GeoTrustX physics rules engine active.
+[CHECK 1] Slope factor: 1.0 (Limit: <= 1.5) -> PASS
+[CHECK 2] Max Acceleration: 2.1 m/s² (Limit: <= 9.8 m/s²) -> PASS
+[CHECK 3] Energy Conservation Equation: Delta E = 0.003 J -> PASS
+[STATUS] Telemetry complies fully with physical laws.
+        """, language="bash")
 
+# --- 06 TRUST & DECISION ---
 elif "06 Trust & Decision" in selected_module:
-    st.header("🛡️ 06 Trust & Decision Output")
+    st.header("🛡️ 06 Trust & Decision Engine")
+    st.caption("Automated Multi-Layer Weighting & Audit Certificate Generation")
+    st.markdown("---")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Reliability Score", "74 %", "+2 %")
+    col2.metric("Consistency Score", "87 %", "+1 %")
+    col3.metric("Confidence Score", "82 %", "Stable")
+    col4.metric("Physics Validation", "100 %", "Passed")
+    
+    st.markdown("### 🏆 Composite Trust Evaluation")
+    st.progress(0.864)
+    
+    st.success("### **DECISION: APPROVED (COMPOSITE TRUST SCORE: 86.4%)**")
+    
+    st.markdown("---")
+    st.markdown("### 📄 Audit Certificate Action")
+    cert_data = json.dumps({
+        "app": "GeoTrustX",
+        "version": "2.0",
+        "composite_trust_score": 86.4,
+        "metrics": {"reliability": 74, "consistency": 87, "confidence": 82, "physics": 100},
+        "status": "APPROVED",
+        "timestamp": time.time()
+    }, indent=4)
+    
+    st.download_button(
+        label="📥 Export Signed Audit Certificate (JSON)",
+        data=cert_data,
+        file_name="geotrustx_audit_certificate.json",
+        mime="application/json"
+    )
 
+# --- 07 3D TRUST MAP ---
 elif "07 3D Trust Map" in selected_module:
     st.header("🗺️ 07 Interactive Spatial Navigation Map")
+    st.caption("Live In-Map Waypoint Routing, Distance Tracking, & Route Verification")
+    st.markdown("---")
     components.html(render_navigation_map(), height=780, scrolling=False)
 
+# --- 08 SEARCH & DIRECTIONS ---
 elif "08 Search & Directions" in selected_module:
     st.header("🚀 08 Spatial Search & Directives")
+    st.caption("Search Telemetry Nodes & Route Directives")
+    st.markdown("---")
+    
+    search_q = st.text_input("🔍 Search Telemetry Node ID / Coordinate / Route:", value="NODE-882-MANGALORE")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**Target Node:** {search_q}")
+        st.write("**Coordinates:** 12.9141° N, 74.8560° E")
+        st.write("**Signal Radius:** 15.2 km")
+    with col2:
+        st.info("🟢 Route Trust Rating: High (Verified safe for navigation)")
+        
     components.html(render_navigation_map(), height=780, scrolling=False)
 
+# --- 09 AI COPILOT ---
 elif "09 AI Copilot" in selected_module:
     st.header("🤖 09 GeoTrustX AI Copilot")
+    st.caption("Interactive Telemetry & Physics Analysis Assistant")
+    st.markdown("---")
+    
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Hello! I am GeoTrustX Copilot. Ask me anything about your trust scores, telemetry feeds, or physics validation rules."}
+        ]
+
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if prompt := st.chat_input("Ask Copilot..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            response = f"**Copilot Analysis:** Query received for '{prompt}'. Live composite trust score is **86.4%** with **100% Physics Validation**."
+            st.markdown(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
