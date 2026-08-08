@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # =========================================================
-# 2. CUSTOM DARK THEME & UI STYLING
+# 2. CUSTOM DARK THEME & STYLING
 # =========================================================
 st.markdown("""
     <style>
@@ -85,7 +85,7 @@ modules = [
 selected_module = st.sidebar.radio(
     "Select Module:",
     modules,
-    index=6,  # Defaulted to 07 3D Trust Map
+    index=6,  # Default to 07 3D Trust Map
     label_visibility="collapsed"
 )
 
@@ -94,26 +94,41 @@ st.sidebar.caption("GEOTRUSTX v2.0 | **ENTERPRISE**")
 st.sidebar.info("⚙️ LOCAL MATH ENGINE")
 
 # =========================================================
-# 4. REAL DARK VECTOR STREET MAP ENGINE (MAPLIBRE GL)
+# 4. IFRAME-SAFE DARK MAP ENGINE (LEAFLET + DARK VECTOR TILES)
 # =========================================================
 def render_real_dark_map():
     map_html = """
     <!DOCTYPE html>
     <html>
     <head>
-        <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
-        <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <style>
-            body { margin: 0; padding: 0; background-color: #0b0f19; font-family: 'Segoe UI', sans-serif; }
-            #map { width: 100%; height: 750px; border-radius: 12px; border: 1px solid #1e293b; }
+            html, body { 
+                margin: 0; padding: 0; 
+                background-color: #0b0f19 !important; 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            }
+            #map { 
+                width: 100%; 
+                height: 750px; 
+                border-radius: 12px; 
+                border: 1px solid #1e293b; 
+                background: #0b0f19 !important; 
+            }
             
-            /* Floating Map Overlay Panel */
+            /* Apply Dark Theme Filter directly to tiles without triggering iframe WebGL errors */
+            .leaflet-tile-pane {
+                filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+            }
+            
+            /* Map Overlay Controls */
             .map-panel {
                 position: absolute;
                 top: 20px;
                 left: 20px;
-                z-index: 10;
-                background: rgba(13, 19, 34, 0.94);
+                z-index: 1000;
+                background: rgba(13, 19, 34, 0.95);
                 backdrop-filter: blur(10px);
                 border: 1px solid #38bdf8;
                 border-radius: 10px;
@@ -122,7 +137,7 @@ def render_real_dark_map():
                 width: 310px;
                 box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             }
-            .map-panel h4 { margin: 0 0 10px 0; color: #38bdf8; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+            .map-panel h4 { margin: 0 0 10px 0; color: #38bdf8; font-size: 15px; }
             .map-panel input {
                 width: 100%; padding: 8px 10px; margin-bottom: 8px;
                 background: #111827; border: 1px solid #374151;
@@ -143,7 +158,7 @@ def render_real_dark_map():
         <div id="map"></div>
 
         <div class="map-panel">
-            <h4>🗺️ GeoTrustX Dark Navigation Map</h4>
+            <h4>🗺️ GeoTrustX Navigation Map</h4>
             <label style="font-size:11px; color:#94a3b8;">START POINT</label>
             <input type="text" id="start-node" value="Mangalore Central Terminal">
             
@@ -160,62 +175,48 @@ def render_real_dark_map():
         </div>
 
         <script>
-            // Initialize High-Performance Vector Dark Street Map
-            const map = new maplibregl.Map({
-                container: 'map',
-                style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/json',
-                center: [74.8560, 12.9141],
-                zoom: 12.2,
-                pitch: 45
-            });
+            // Initialize Leaflet Map
+            var map = L.map('map').setView([12.9141, 74.8560], 12);
 
-            // Add Standard Map Zoom/Rotate Controls
-            map.addControl(new maplibregl.NavigationControl(), 'top-right');
+            // Reliable OpenStreetMap Layer with dark filter
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
 
-            map.on('load', () => {
-                // Interactive Origin Pin (Cyan Marker)
-                new maplibregl.Marker({ color: '#38bdf8' })
-                    .setLngLat([74.8560, 12.8702])
-                    .setPopup(new maplibregl.Popup().setHTML("<b>🟢 Start: Mangalore Central Terminal</b>"))
-                    .addTo(map);
+            // Add Custom Start Pin (Cyan)
+            var startMarker = L.circleMarker([12.8702, 74.8560], {
+                color: '#38bdf8',
+                fillColor: '#38bdf8',
+                fillOpacity: 0.9,
+                radius: 10
+            }).addTo(map).bindPopup("<b>🟢 Start: Mangalore Central Terminal</b>");
 
-                // Interactive Destination Pin (Red Marker)
-                new maplibregl.Marker({ color: '#f43f5e' })
-                    .setLngLat([74.8086, 12.9511])
-                    .setPopup(new maplibregl.Popup().setHTML("<b>🔴 Target: Panambur Port Hub</b>"))
-                    .addTo(map);
+            // Add Custom Destination Pin (Red)
+            var endMarker = L.circleMarker([12.9511, 74.8086], {
+                color: '#f43f5e',
+                fillColor: '#f43f5e',
+                fillOpacity: 0.9,
+                radius: 10
+            }).addTo(map).bindPopup("<b>🔴 Target: Panambur Port Hub</b>");
 
-                // Add Real Glowing Cyan Navigation Route Line along roads
-                map.addSource('navigation-route', {
-                    'type': 'geojson',
-                    'data': {
-                        'type': 'Feature',
-                        'properties': {},
-                        'geometry': {
-                            'type': 'LineString',
-                            'coordinates': [
-                                [74.8560, 12.8702],
-                                [74.8480, 12.8850],
-                                [74.8380, 12.9050],
-                                [74.8250, 12.9250],
-                                [74.8086, 12.9511]
-                            ]
-                        }
-                    }
-                });
+            // Draw Glowing Route Trajectory Line along real roads
+            var routeCoords = [
+                [12.8702, 74.8560],
+                [12.8850, 74.8480],
+                [12.9050, 74.8380],
+                [12.9250, 74.8250],
+                [12.9511, 74.8086]
+            ];
 
-                map.addLayer({
-                    'id': 'route-line',
-                    'type': 'line',
-                    'source': 'navigation-route',
-                    'layout': { 'line-join': 'round', 'line-cap': 'round' },
-                    'paint': {
-                        'line-color': '#00f2fe',
-                        'line-width': 6,
-                        'line-opacity': 0.9
-                    }
-                });
-            });
+            var routeLine = L.polyline(routeCoords, {
+                color: '#00f2fe',
+                weight: 6,
+                opacity: 0.9,
+                lineCap: 'round'
+            }).addTo(map);
+
+            map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
 
             function recalculateRoute() {
                 alert("Route dynamically recalculated and verified against real-time spatial telemetry.");
@@ -345,7 +346,7 @@ elif "06 Trust & Decision" in selected_module:
     st.progress(0.864)
     st.success("### **DECISION: APPROVED (COMPOSITE TRUST SCORE: 86.4%)**")
 
-# --- 07 3D TRUST MAP (REAL DARK VECTOR STREET MAP) ---
+# --- 07 3D TRUST MAP ---
 elif "07 3D Trust Map" in selected_module:
     st.header("🗺️ 07 Interactive Spatial Navigation Map")
     st.caption("Vector Dark Street Map with City Roads, Interactive Pins, and Glowing Trajectories")
