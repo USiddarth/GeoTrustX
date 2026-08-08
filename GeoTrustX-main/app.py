@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # =========================================================
-# 2. CUSTOM DARK THEME & UI STYLING
+# 2. CUSTOM DARK THEME & STYLING
 # =========================================================
 st.markdown("""
     <style>
@@ -85,7 +85,7 @@ modules = [
 selected_module = st.sidebar.radio(
     "Select Module:",
     modules,
-    index=5,  # Defaulted to 06 Trust & Decision
+    index=4,  # Defaulted to 05 Physics Validation
     label_visibility="collapsed"
 )
 
@@ -94,151 +94,104 @@ st.sidebar.caption("GEOTRUSTX v2.0 | **ENTERPRISE**")
 st.sidebar.info("⚙️ LOCAL MATH ENGINE")
 
 # =========================================================
-# 4. INTERACTIVE MAP ENGINE HTML GENERATOR
+# 4. DECK.GL + MAPLIBRE 3D GPU EXTRUSION ENGINE
 # =========================================================
-def render_navigation_map():
-    map_html = """
+def render_deckgl_3d_map():
+    deck_html = """
     <!DOCTYPE html>
     <html>
     <head>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+        <script src="https://unpkg.com/deck.gl@8.9.0/dist.min.js"></script>
+        <script src="https://unpkg.com/maplibre-gl@3.0.0/dist/maplibre-gl.js"></script>
+        <link href="https://unpkg.com/maplibre-gl@3.0.0/dist/maplibre-gl.css" rel="stylesheet" />
         <style>
-            html, body { 
-                margin: 0; 
-                padding: 0; 
-                background-color: #0b0f19 !important; 
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            }
-            #map { 
-                width: 100%; 
-                height: 750px; 
-                border-radius: 12px; 
-                border: 1px solid #1e293b; 
-                background-color: #0b0f19 !important; 
-            }
-            .leaflet-container { 
-                background: #0b0f19 !important; 
-            }
-            .leaflet-tile-pane {
-                filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(90%);
-            }
-            .nav-panel {
+            body { margin: 0; padding: 0; background-color: #0b0f19; overflow: hidden; font-family: sans-serif; }
+            #container { width: 100vw; height: 750px; }
+            .overlay-card {
                 position: absolute;
                 top: 20px;
                 left: 20px;
-                z-index: 1000;
-                background: rgba(13, 19, 34, 0.95);
-                backdrop-filter: blur(12px);
+                z-index: 10;
+                background: rgba(13, 19, 34, 0.92);
                 border: 1px solid #38bdf8;
+                border-radius: 10px;
                 padding: 16px;
-                border-radius: 12px;
-                color: #e2e8f0;
-                width: 320px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-            }
-            .nav-panel h4 { margin: 0 0 12px 0; color: #38bdf8; font-size: 16px; }
-            .nav-panel input {
-                width: 100%;
-                padding: 8px 12px;
-                margin-bottom: 10px;
-                background: #111827;
-                border: 1px solid #374151;
-                border-radius: 6px;
                 color: #fff;
-                box-sizing: border-box;
-                font-size: 13px;
+                width: 300px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.8);
             }
-            .nav-panel button {
-                width: 100%;
-                padding: 10px;
-                background: #0284c7;
-                border: none;
-                border-radius: 6px;
-                color: #fff;
-                font-weight: bold;
-                cursor: pointer;
-                transition: 0.2s;
-            }
-            .nav-panel button:hover { background: #0369a1; }
-            .leaflet-routing-container { display: none !important; }
-            .stats-badge {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 10px;
-                padding: 8px;
-                background: #111827;
-                border-radius: 6px;
-                font-size: 12px;
-            }
-            .stats-badge span { color: #38bdf8; font-weight: bold; }
+            .overlay-card h3 { margin: 0 0 8px 0; color: #38bdf8; font-size: 15px; }
+            .stat-line { display: flex; justify-content: space-between; font-size: 12px; margin-top: 6px; }
+            .stat-val { color: #00f2fe; font-weight: bold; }
         </style>
     </head>
     <body>
-
-        <div id="map"></div>
-
-        <div class="nav-panel">
-            <h4>🗺️ GeoTrustX Routing Engine</h4>
-            <label style="font-size:11px; color:#94a3b8;">START LOCATION</label>
-            <input type="text" id="start-input" value="Mangalore City Center">
-            
-            <label style="font-size:11px; color:#94a3b8;">DESTINATION NODE</label>
-            <input type="text" id="end-input" value="Panambur Port Telemetry Hub">
-            
-            <button onclick="calculateRoute()">⚡ Calculate Verified Route</button>
-            
-            <div class="stats-badge">
-                <div>Distance: <span id="dist">-- km</span></div>
-                <div>ETA: <span id="time">-- min</span></div>
-                <div>Trust: <span style="color:#4ade80;">98.4%</span></div>
-            </div>
+        <div class="overlay-card">
+            <h3>🗺️ Deck.gl GPU 3D Spatial Extrusion</h3>
+            <div style="font-size:11px; color:#94a3b8;">Render Engine: MapLibre + WebGL</div>
+            <hr style="border-color:#1e293b; margin:10px 0;">
+            <div class="stat-line"><span>Active 3D Extruded Nodes:</span><span class="stat-val">350 Points</span></div>
+            <div class="stat-line"><span>Elevation Metric:</span><span class="stat-val">Trust Density (m)</span></div>
+            <div class="stat-line"><span>Max Column Height:</span><span class="stat-val">1,200m</span></div>
+            <div class="stat-line"><span>GPU Frame Rate:</span><span class="stat-val" style="color:#4ade80;">60 FPS</span></div>
         </div>
 
+        <div id="container"></div>
+
         <script>
-            var map = L.map('map').setView([12.8702, 74.8806], 12);
+            // Generate Spatial Extrusion Data around Coordinates
+            const DATA = [];
+            const centerLng = 74.8560;
+            const centerLat = 12.9141;
 
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
-
-            var routingControl = null;
-            var nodes = {
-                "start": [12.8702, 74.8806],
-                "end": [12.9511, 74.8086]
-            };
-
-            function calculateRoute() {
-                if (routingControl) {
-                    map.removeControl(routingControl);
-                }
-
-                routingControl = L.Routing.control({
-                    waypoints: [
-                        L.latLng(nodes.start[0], nodes.start[1]),
-                        L.latLng(nodes.end[0], nodes.end[1])
+            for (let i = 0; i < 350; i++) {
+                const trustScore = Math.random() * 100;
+                DATA.push({
+                    position: [
+                        centerLng + (Math.random() - 0.5) * 0.18,
+                        centerLat + (Math.random() - 0.5) * 0.18
                     ],
-                    lineOptions: {
-                        styles: [{ color: '#00f2fe', opacity: 0.9, weight: 6 }]
-                    }
-                }).addTo(map);
-
-                routingControl.on('routesfound', function(e) {
-                    var summary = e.routes[0].summary;
-                    document.getElementById('dist').innerText = (summary.totalDistance / 1000).toFixed(1) + " km";
-                    document.getElementById('time').innerText = Math.round(summary.totalTime / 60) + " min";
+                    elevation: trustScore * 12, // Extrusion height derived from Trust Score
+                    trust: trustScore
                 });
             }
 
-            calculateRoute();
+            const {DeckGL, ColumnLayer} = deck;
+
+            new DeckGL({
+                container: 'container',
+                mapStyle: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/json',
+                initialViewState: {
+                    longitude: centerLng,
+                    latitude: centerLat,
+                    zoom: 11.8,
+                    pitch: 58,
+                    bearing: -28
+                },
+                controller: true,
+                layers: [
+                    new ColumnLayer({
+                        id: '3d-trust-extrusions',
+                        data: DATA,
+                        diskResolution: 12,
+                        radius: 120,
+                        extruded: true,
+                        pickable: true,
+                        elevationScale: 1.2,
+                        getPosition: d => d.position,
+                        getElevation: d => d.elevation,
+                        getFillColor: d => d.trust > 80 ? [0, 242, 254, 210] : (d.trust > 50 ? [234, 179, 8, 210] : [239, 68, 68, 210]),
+                        transitions: {
+                            getElevation: 1000
+                        }
+                    })
+                ]
+            });
         </script>
     </body>
     </html>
     """
-    return map_html
+    return deck_html
 
 # =========================================================
 # 5. MODULE CONTENT ROUTING
@@ -262,7 +215,7 @@ if "01 Overview" in selected_module:
 # --- 02 SOURCE INGESTION ---
 elif "02 Source Ingestion" in selected_module:
     st.header("📡 02 Source Ingestion Pipeline")
-    st.caption("Real-Time Multi-Sensor Telemetry & Data Stream Ingestion")
+    st.caption("Real-Time Multi-Sensor Telemetry & Ingestion")
     st.markdown("---")
     
     col1, col2, col3, col4 = st.columns(4)
@@ -270,148 +223,111 @@ elif "02 Source Ingestion" in selected_module:
     col2.metric("Ingestion Rate", "1.24 GB/s", "+0.08 GB/s")
     col3.metric("Signal Quality", "99.4%", "+0.2%")
     col4.metric("Avg Latency", "8.2 ms", "-1.1 ms")
-    
-    st.markdown("### 📈 Live Telemetry Throughput")
-    chart_data = pd.DataFrame(
-        np.random.randn(20, 3) * [2, 5, 1] + [100, 250, 50],
-        columns=['Satellite Feed Alpha', 'Hydrological Sensor B', 'Radar Array 04']
-    )
-    st.line_chart(chart_data)
 
 # --- 03 CONSISTENCY ENGINE ---
 elif "03 Consistency Engine" in selected_module:
     st.header("⚙️ 03 Consistency Engine")
-    st.caption("Pairwise Conflict Matrices & Multi-Source Cross-Verification")
+    st.caption("Pairwise Conflict Matrices & Disagreement Bounds")
     st.markdown("---")
     
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Consistency Index", "87.0%", "+1.4%")
-    col2.metric("Pairwise Conflicts", "0 Detected", "Optimal")
-    col3.metric("Matrix Sync Time", "1.2 ms", "Real-Time")
-
-    st.markdown("### 🔍 Pairwise Disagreement Matrix")
     matrix_data = pd.DataFrame(
-        [
-            [1.00, 0.98, 0.95, 0.99],
-            [0.98, 1.00, 0.92, 0.97],
-            [0.95, 0.92, 1.00, 0.94],
-            [0.99, 0.97, 0.94, 1.00]
-        ],
-        columns=["Sensor Alpha", "Sensor Beta", "Radar Gamma", "Sat Delta"],
-        index=["Sensor Alpha", "Sensor Beta", "Radar Gamma", "Sat Delta"]
+        [[1.00, 0.98, 0.95], [0.98, 1.00, 0.92], [0.95, 0.92, 1.00]],
+        columns=["Satellite Feed", "Hydrological Sensor", "Radar Array"],
+        index=["Satellite Feed", "Hydrological Sensor", "Radar Array"]
     )
     st.dataframe(matrix_data, use_container_width=True)
 
 # --- 04 CONFIDENCE ENGINE ---
 elif "04 Confidence Engine" in selected_module:
     st.header("🎯 04 Confidence Engine")
-    st.caption("Ensemble Standard Deviation (sigma) & Calibrated Monte Carlo Bounds")
+    st.caption("Calibrated Confidence Score Bounds & Monte Carlo Ensemble Variance")
     st.markdown("---")
     
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Confidence Score", "82.0%", "Calibrated")
-    col2.metric("Std Deviation Spread", "1.42", "-0.15")
-    col3.metric("Monte Carlo Iterations", "10,000", "Passed")
+    st.metric("Confidence Score", "82.0%", "Calibrated")
 
-    st.markdown("### 🎲 Monte Carlo Confidence Interval Spread")
-    np.random.seed(42)
-    mc_sim = pd.DataFrame(
-        np.random.normal(82, 1.42, size=(100, 1)),
-        columns=["Calibrated Score Spread"]
-    )
-    st.area_chart(mc_sim)
-
-# --- 05 PHYSICS VALIDATION ---
+# --- 05 PHYSICS VALIDATION (TOPOGRAPHICAL & HYDROLOGICAL CONSTRAINTS) ---
 elif "05 Physics Validation" in selected_module:
-    st.header("⚡ 05 Physics Validation Engine")
-    st.caption("Real-Time Physical Boundary & Hydro-Constraint Compliance")
+    st.header("⚡ 05 Topographical & Physical Constraint Engine")
+    st.caption("Evaluates AI Predictions against Real-World Hydrological & Elevation Boundaries")
     st.markdown("---")
     
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        st.metric("Physics Validation Score", "100%", "Pass Rate")
-        st.success("✅ Hydrological Constraints Verified")
-        st.success("✅ Velocity Cap Limits Verified")
-        st.success("✅ Thermal Gradient Bounds Passed")
+    st.subheader("🧪 Live Physical Boundary Simulation")
     
-    with col2:
-        st.markdown("### 📜 Constraint Rule Audit Log")
-        st.code("""
-[SYSTEM] GeoTrustX physics rules engine active.
-[CHECK 1] Slope factor: 1.0 (Limit: <= 1.5) -> PASS
-[CHECK 2] Max Acceleration: 2.1 m/s² (Limit: <= 9.8 m/s²) -> PASS
-[CHECK 3] Energy Conservation Equation: Delta E = 0.003 J -> PASS
-[STATUS] Telemetry complies fully with physical laws.
-        """, language="bash")
+    col_input1, col_input2, col_input3 = st.columns(3)
+    with col_input1:
+        rainfall = st.slider("Rainfall Intensity (mm/hr)", min_value=0, max_value=200, value=65)
+    with col_input2:
+        elevation = st.slider("Floodplain Elevation (m ASL)", min_value=0, max_value=100, value=12)
+    with col_input3:
+        slope = st.slider("Terrain Slope Factor (°)", min_value=0.1, max_value=5.0, value=1.0)
+
+    # Topographical Physics Verification Logic
+    risk_factor = (rainfall * slope) / max(elevation, 1.0)
+    
+    st.markdown("### 📊 Verification Result")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Calculated Hydro-Risk Index", f"{risk_factor:.2f}")
+    
+    if risk_factor > 10.0:
+        c2.metric("Physics Validation Status", "FAILED", delta="- Breach Hazard", delta_color="inverse")
+        st.error(f"❌ **PHYSICAL CONSTRAINT VIOLATION DETECTED:** Rainfall intensity ({rainfall} mm/hr) exceeds safe threshold for Floodplain Elevation ({elevation}m ASL). Prediction rejected by physics layer.")
+    else:
+        c2.metric("Physics Validation Status", "100% PASSED", delta="Within Bounds")
+        st.success(f"✅ **PHYSICS BOUNDS VERIFIED:** Prediction is hydro-physically consistent with terrain elevation ({elevation}m) and slope factor ({slope}).")
+
+    c3.metric("Slope Boundary Check", "PASS", "Slope <= 5.0°")
+
+    st.markdown("### 📜 Hydrological Rule Execution Log")
+    st.code(f"""
+[SYSTEM] Evaluating AI prediction against Topographical & Physical Constraints...
+[HYDROLOGY] Live Rainfall Input: {rainfall} mm/hr
+[ELEVATION] Terrain Floodplain Altitude: {elevation} m Above Sea Level
+[SLOPE FACTOR] Measured Incline Angle: {slope}°
+[EQUATION] Risk = (Rainfall * Slope) / Elevation = ({rainfall} * {slope}) / {elevation} = {risk_factor:.2f}
+[CONSTRAINT LIMIT] Risk Threshold <= 10.0
+[EVALUATION] -> {"PASSED (Prediction Logically Valid)" if risk_factor <= 10.0 else "FAILED (Hydro-Physical Anomaly)"}
+    """, language="bash")
 
 # --- 06 TRUST & DECISION ---
 elif "06 Trust & Decision" in selected_module:
     st.header("🛡️ 06 Trust & Decision Engine")
-    st.caption("Automated Multi-Layer Weighting & Audit Certificate Generation")
+    st.caption("Composite Trust Output & Audit Certificates")
     st.markdown("---")
     
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Reliability Score", "74 %", "+2 %")
-    col2.metric("Consistency Score", "87 %", "+1 %")
-    col3.metric("Confidence Score", "82 %", "Stable")
-    col4.metric("Physics Validation", "100 %", "Passed")
+    col1.metric("Reliability", "74 %")
+    col2.metric("Consistency", "87 %")
+    col3.metric("Confidence", "82 %")
+    col4.metric("Physics", "100 %")
     
-    st.markdown("### 🏆 Composite Trust Evaluation")
     st.progress(0.864)
-    
     st.success("### **DECISION: APPROVED (COMPOSITE TRUST SCORE: 86.4%)**")
-    
-    st.markdown("---")
-    st.markdown("### 📄 Audit Certificate Action")
-    cert_data = json.dumps({
-        "app": "GeoTrustX",
-        "version": "2.0",
-        "composite_trust_score": 86.4,
-        "metrics": {"reliability": 74, "consistency": 87, "confidence": 82, "physics": 100},
-        "status": "APPROVED",
-        "timestamp": time.time()
-    }, indent=4)
-    
-    st.download_button(
-        label="📥 Export Signed Audit Certificate (JSON)",
-        data=cert_data,
-        file_name="geotrustx_audit_certificate.json",
-        mime="application/json"
-    )
 
-# --- 07 3D TRUST MAP ---
+# --- 07 3D TRUST MAP (DECK.GL GPU EXTRUSION) ---
 elif "07 3D Trust Map" in selected_module:
-    st.header("🗺️ 07 Interactive Spatial Navigation Map")
-    st.caption("Live In-Map Waypoint Routing, Distance Tracking, & Route Verification")
+    st.header("🗺️ 07 GPU-Accelerated 3D Spatial Extrusion Map")
+    st.caption("Interactive Deck.gl + MapLibre Spatial Density Rendering with GPU Extruded Columns")
     st.markdown("---")
-    components.html(render_navigation_map(), height=780, scrolling=False)
+    components.html(render_deckgl_3d_map(), height=780, scrolling=False)
 
 # --- 08 SEARCH & DIRECTIONS ---
 elif "08 Search & Directions" in selected_module:
-    st.header("🚀 08 Spatial Search & Directives")
-    st.caption("Search Telemetry Nodes & Route Directives")
+    st.header("🚀 08 Search & Spatial Directives")
+    st.caption("Search Telemetry Nodes & Route Verification")
     st.markdown("---")
     
-    search_q = st.text_input("🔍 Search Telemetry Node ID / Coordinate / Route:", value="NODE-882-MANGALORE")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write(f"**Target Node:** {search_q}")
-        st.write("**Coordinates:** 12.9141° N, 74.8560° E")
-        st.write("**Signal Radius:** 15.2 km")
-    with col2:
-        st.info("🟢 Route Trust Rating: High (Verified safe for navigation)")
-        
-    components.html(render_navigation_map(), height=780, scrolling=False)
+    st.text_input("🔍 Search Telemetry Node ID / Coordinate / Route:", value="NODE-882-MANGALORE")
+    components.html(render_deckgl_3d_map(), height=780, scrolling=False)
 
 # --- 09 AI COPILOT ---
 elif "09 AI Copilot" in selected_module:
     st.header("🤖 09 GeoTrustX AI Copilot")
-    st.caption("Interactive Telemetry & Physics Analysis Assistant")
+    st.caption("Interactive Telemetry & Physical Constraint Analysis Assistant")
     st.markdown("---")
     
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "Hello! I am GeoTrustX Copilot. Ask me anything about your trust scores, telemetry feeds, or physics validation rules."}
+            {"role": "assistant", "content": "Hello! I am GeoTrustX Copilot. Ask me anything about topographical constraints or 3D Deck.gl trust extrusions."}
         ]
 
     for message in st.session_state.messages:
@@ -424,6 +340,6 @@ elif "09 AI Copilot" in selected_module:
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            response = f"**Copilot Analysis:** Query received for '{prompt}'. Live composite trust score is **86.4%** with **100% Physics Validation**."
+            response = f"**Copilot Analysis:** Query received for '{prompt}'. System running Deck.gl 3D GPU Extrusions with active Hydro-Elevation constraint checks."
             st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
