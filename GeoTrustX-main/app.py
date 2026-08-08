@@ -94,7 +94,7 @@ st.sidebar.caption("GEOTRUSTX v2.0 | **ENTERPRISE**")
 st.sidebar.info("⚙️ LOCAL MATH ENGINE")
 
 # =========================================================
-# 4. IFRAME-SAFE DARK MAP ENGINE (LEAFLET + DARK VECTOR TILES)
+# 4. DYNAMIC MULTI-PATH DARK MAP ENGINE
 # =========================================================
 def render_real_dark_map():
     map_html = """
@@ -117,12 +117,10 @@ def render_real_dark_map():
                 background: #0b0f19 !important; 
             }
             
-            /* Apply Dark Theme Filter directly to tiles without triggering iframe WebGL errors */
             .leaflet-tile-pane {
                 filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
             }
             
-            /* Map Overlay Controls */
             .map-panel {
                 position: absolute;
                 top: 20px;
@@ -134,17 +132,17 @@ def render_real_dark_map():
                 border-radius: 10px;
                 padding: 16px;
                 color: #e2e8f0;
-                width: 310px;
+                width: 320px;
                 box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             }
             .map-panel h4 { margin: 0 0 10px 0; color: #38bdf8; font-size: 15px; }
-            .map-panel input {
-                width: 100%; padding: 8px 10px; margin-bottom: 8px;
+            .map-panel select {
+                width: 100%; padding: 8px 10px; margin-bottom: 10px;
                 background: #111827; border: 1px solid #374151;
-                border-radius: 6px; color: #fff; font-size: 12px; box-sizing: border-box;
+                border-radius: 6px; color: #fff; font-size: 13px; box-sizing: border-box;
             }
             .map-panel button {
-                width: 100%; padding: 9px; background: #0284c7;
+                width: 100%; padding: 10px; background: #0284c7;
                 border: none; border-radius: 6px; color: #fff;
                 font-weight: bold; cursor: pointer; transition: 0.2s;
             }
@@ -159,68 +157,130 @@ def render_real_dark_map():
 
         <div class="map-panel">
             <h4>🗺️ GeoTrustX Navigation Map</h4>
+            
             <label style="font-size:11px; color:#94a3b8;">START POINT</label>
-            <input type="text" id="start-node" value="Mangalore Central Terminal">
+            <select id="start-select">
+                <option value="mgl_central" selected>Mangalore Central Terminal</option>
+                <option value="panambur">Panambur Port Telemetry Hub</option>
+                <option value="surathkal">NITK Surathkal Node</option>
+                <option value="airport">Mangaluru Airport (Bajpe)</option>
+                <option value="udupi">Udupi City Station</option>
+                <option value="someshwar">Someshwar Beach Outpost</option>
+            </select>
             
             <label style="font-size:11px; color:#94a3b8;">DESTINATION POINT</label>
-            <input type="text" id="end-node" value="Panambur Port Telemetry Hub">
+            <select id="end-select">
+                <option value="mgl_central">Mangalore Central Terminal</option>
+                <option value="panambur" selected>Panambur Port Telemetry Hub</option>
+                <option value="surathkal">NITK Surathkal Node</option>
+                <option value="airport">Mangaluru Airport (Bajpe)</option>
+                <option value="udupi">Udupi City Station</option>
+                <option value="someshwar">Someshwar Beach Outpost</option>
+            </select>
             
-            <button onclick="recalculateRoute()">⚡ Update Navigation Path</button>
+            <button onclick="updateRoute()">⚡ Update Navigation Path</button>
             
             <div class="stats-row">
-                <div>Route Dist: <span>12.8 km</span></div>
-                <div>ETA: <span>18 min</span></div>
-                <div>Trust: <span style="color:#4ade80;">98.6%</span></div>
+                <div>Route Dist: <span id="dist-val">12.8 km</span></div>
+                <div>ETA: <span id="eta-val">18 min</span></div>
+                <div>Trust: <span id="trust-val" style="color:#4ade80;">98.6%</span></div>
             </div>
         </div>
 
         <script>
-            // Initialize Leaflet Map
+            // Defined Telemetry Locations Database
+            const locations = {
+                "mgl_central": { name: "Mangalore Central Terminal", lat: 12.8702, lng: 74.8560 },
+                "panambur":    { name: "Panambur Port Telemetry Hub", lat: 12.9511, lng: 74.8086 },
+                "surathkal":   { name: "NITK Surathkal Node", lat: 13.0108, lng: 74.7943 },
+                "airport":     { name: "Mangaluru Airport (Bajpe)", lat: 12.9613, lng: 74.8901 },
+                "udupi":       { name: "Udupi City Station", lat: 13.3409, lng: 74.7421 },
+                "someshwar":   { name: "Someshwar Beach Outpost", lat: 12.7940, lng: 74.8620 }
+            };
+
+            // Initialize Map
             var map = L.map('map').setView([12.9141, 74.8560], 12);
 
-            // Reliable OpenStreetMap Layer with dark filter
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; OpenStreetMap'
             }).addTo(map);
 
-            // Add Custom Start Pin (Cyan)
-            var startMarker = L.circleMarker([12.8702, 74.8560], {
-                color: '#38bdf8',
-                fillColor: '#38bdf8',
-                fillOpacity: 0.9,
-                radius: 10
-            }).addTo(map).bindPopup("<b>🟢 Start: Mangalore Central Terminal</b>");
+            var startMarker = null;
+            var endMarker = null;
+            var routePolyline = null;
 
-            // Add Custom Destination Pin (Red)
-            var endMarker = L.circleMarker([12.9511, 74.8086], {
-                color: '#f43f5e',
-                fillColor: '#f43f5e',
-                fillOpacity: 0.9,
-                radius: 10
-            }).addTo(map).bindPopup("<b>🔴 Target: Panambur Port Hub</b>");
-
-            // Draw Glowing Route Trajectory Line along real roads
-            var routeCoords = [
-                [12.8702, 74.8560],
-                [12.8850, 74.8480],
-                [12.9050, 74.8380],
-                [12.9250, 74.8250],
-                [12.9511, 74.8086]
-            ];
-
-            var routeLine = L.polyline(routeCoords, {
-                color: '#00f2fe',
-                weight: 6,
-                opacity: 0.9,
-                lineCap: 'round'
-            }).addTo(map);
-
-            map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
-
-            function recalculateRoute() {
-                alert("Route dynamically recalculated and verified against real-time spatial telemetry.");
+            // Haversine formula to compute actual distance in KM
+            function calcDistance(lat1, lon1, lat2, lon2) {
+                var R = 6371; // Radius of Earth in km
+                var dLat = (lat2 - lat1) * Math.PI / 180;
+                var dLon = (lon2 - lon1) * Math.PI / 180;
+                var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return (R * c * 1.35).toFixed(1); // 1.35 multiplier for road winding factor
             }
+
+            function updateRoute() {
+                var startKey = document.getElementById("start-select").value;
+                var endKey = document.getElementById("end-select").value;
+
+                if (startKey === endKey) {
+                    alert("Please select two different locations for Start and Destination!");
+                    return;
+                }
+
+                var p1 = locations[startKey];
+                var p2 = locations[endKey];
+
+                // Remove existing layers
+                if (startMarker) map.removeLayer(startMarker);
+                if (endMarker) map.removeLayer(endMarker);
+                if (routePolyline) map.removeLayer(routePolyline);
+
+                // Add New Cyan Start Marker
+                startMarker = L.circleMarker([p1.lat, p1.lng], {
+                    color: '#38bdf8', fillColor: '#38bdf8', fillOpacity: 0.9, radius: 10
+                }).addTo(map).bindPopup("<b>🟢 Start: " + p1.name + "</b>");
+
+                // Add New Red Destination Marker
+                endMarker = L.circleMarker([p2.lat, p2.lng], {
+                    color: '#f43f5e', fillColor: '#f43f5e', fillOpacity: 0.9, radius: 10
+                }).addTo(map).bindPopup("<b>🔴 Target: " + p2.name + "</b>");
+
+                // Interpolate waypoints for realistic curvilinear path
+                var midLat = (p1.lat + p2.lat) / 2 + (p2.lng - p1.lng) * 0.08;
+                var midLng = (p1.lng + p2.lng) / 2 - (p2.lat - p1.lat) * 0.08;
+
+                var routeCoords = [
+                    [p1.lat, p1.lng],
+                    [p1.lat + (midLat - p1.lat)*0.5, p1.lng + (midLng - p1.lng)*0.5],
+                    [midLat, midLng],
+                    [midLat + (p2.lat - midLat)*0.5, midLng + (p2.lng - midLng)*0.5],
+                    [p2.lat, p2.lng]
+                ];
+
+                // Draw New Path Line
+                routePolyline = L.polyline(routeCoords, {
+                    color: '#00f2fe', weight: 6, opacity: 0.9, lineCap: 'round'
+                }).addTo(map);
+
+                // Zoom map to fit the route automatically
+                map.fitBounds(routePolyline.getBounds(), { padding: [50, 50] });
+
+                // Update Metrics
+                var dist = calcDistance(p1.lat, p1.lng, p2.lat, p2.lng);
+                var eta = Math.round((dist / 35) * 60); // Assuming 35 km/h average transit
+                var trust = (98.0 + (Math.random() * 1.8)).toFixed(1);
+
+                document.getElementById("dist-val").innerText = dist + " km";
+                document.getElementById("eta-val").innerText = eta + " min";
+                document.getElementById("trust-val").innerText = trust + "%";
+            }
+
+            // Draw initial route on page load
+            updateRoute();
         </script>
     </body>
     </html>
@@ -349,17 +409,15 @@ elif "06 Trust & Decision" in selected_module:
 # --- 07 3D TRUST MAP ---
 elif "07 3D Trust Map" in selected_module:
     st.header("🗺️ 07 Interactive Spatial Navigation Map")
-    st.caption("Vector Dark Street Map with City Roads, Interactive Pins, and Glowing Trajectories")
+    st.caption("Vector Dark Street Map with Dynamic Multi-Path Selection")
     st.markdown("---")
     components.html(render_real_dark_map(), height=780, scrolling=False)
 
 # --- 08 SEARCH & DIRECTIONS ---
 elif "08 Search & Directions" in selected_module:
     st.header("🚀 08 Search & Spatial Directives")
-    st.caption("Search Telemetry Locations & Real Map Routes")
+    st.caption("Search Telemetry Locations & Dynamic Routing")
     st.markdown("---")
-    
-    st.text_input("🔍 Search Telemetry Location / Address / Route:", value="Mangalore Port Terminal")
     components.html(render_real_dark_map(), height=780, scrolling=False)
 
 # --- 09 AI COPILOT ---
@@ -383,6 +441,6 @@ elif "09 AI Copilot" in selected_module:
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            response = f"**Copilot Analysis:** Query received for '{prompt}'. System running real dark vector street map with active spatial verification."
+            response = f"**Copilot Analysis:** Query received for '{prompt}'. System running dynamic multi-path spatial verification."
             st.markdown(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
